@@ -1,0 +1,32 @@
+---
+title: "Adopt the SecondBrain retrieval stack"
+doc_type: decision
+decision_type: agentic_workflow
+created: "{{DATE}}"
+updated: "{{DATE}}"
+project: second-brain
+status: accepted
+decision_owner: "me"
+source_files: []
+confidence: high
+supersedes: []
+superseded_by:
+tags: [meta, architecture]
+---
+
+# Adopt the SecondBrain retrieval stack
+
+## Decision
+
+Use Obsidian for human browsing, MarkItDown for conversion, scoped search
+collections for lookup, Basic Memory for agent memory, and MCP as the only
+agent interface to this vault.
+
+## Rationale
+
+Agents should retrieve the right context, not more context. Generated
+Markdown is not trusted knowledge until reviewed. The whole system must
+remain understandable from the filesystem.
+
+Seeded by the installer as a working example of decision-note frontmatter —
+edit or delete freely.

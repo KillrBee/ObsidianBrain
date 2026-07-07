@@ -1,0 +1,27 @@
+# Frontmatter schema: converted source files (spec §7.1)
+$schema: "http://json-schema.org/draft-07/schema#"
+title: source_conversion
+type: object
+required: [title, doc_type, source_file, source_checksum, converted_by, converted_at, trust_level, review_status, status]
+properties:
+  title: {type: string}
+  doc_type: {const: source_conversion}
+  source_file: {type: string}
+  source_format: {type: [string, "null"]}
+  source_checksum: {type: string, pattern: "^sha256:[0-9a-f]{64}$"}
+  converted_by: {type: string}
+  converted_at: {type: string}
+  source_modified_at: {type: [string, "null"]}
+  project: {type: [string, "null"]}
+  domain: {type: array, items: {type: string}}
+  status: {enum: [converted, deprecated, superseded, archived]}
+  trust_level: {enum: [source-derived]}
+  review_status: {enum: [unreviewed, reviewed]}
+  effective_from: {type: [string, "null"]}
+  effective_to: {type: [string, "null"]}
+  contains_tables: {enum: [true, false, unknown]}
+  contains_images: {enum: [true, false, unknown]}
+  contains_comments: {enum: [true, false, unknown]}
+  contains_ocr: {type: boolean}
+  summary_file: {type: [string, "null"]}
+  tags: {type: array, items: {type: string}}

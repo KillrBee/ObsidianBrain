@@ -1,0 +1,28 @@
+# SecondBrain vault .gitignore (seeded by installer v{{VERSION}})
+.obsidian/workspace*
+.obsidian/cache
+.DS_Store
+*.tmp
+*.bak
+*.bak.*
+*.log
+.venv/
+node_modules/
+.qmd/cache/
+.basic-memory/cache/
+
+# Vault-local python environment for retrieval scripts
+70-scripts/.venv/
+
+# Logs churn constantly; keep them out of history
+80-logs/**
+!80-logs/**/.gitkeep
+
+# Inbox is transient staging, not knowledge
+00-inbox/raw-drops/**
+!00-inbox/raw-drops/.gitkeep
+00-inbox/needs-triage/**
+!00-inbox/needs-triage/.gitkeep
+
+# Machine-local installer state
+60-index-config/install-state.json

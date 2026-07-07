@@ -1,0 +1,4 @@
+# Sourced files are resolved at runtime relative to SB_INSTALLER_ROOT / vault root.
+disable=SC1090,SC1091
+# Variables defined in one lib module and consumed in another look unused per-file.
+disable=SC2034

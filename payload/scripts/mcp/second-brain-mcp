@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# second-brain-mcp — stdio launcher for the second-brain MCP server.
+# Referenced from .mcp.json (Claude Code) and ~/.codex/config.toml (Codex).
+set -u
+. "$(cd "$(dirname "$0")" && pwd)/../lib/sb_common.sh"
+export SB_VAULT_DIR="$SB_VAULT_ROOT"
+exec "$(sb_python_bin)" "$SB_SCRIPTS_ROOT/mcp/server.py" "$@"

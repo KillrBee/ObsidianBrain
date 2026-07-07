@@ -1,0 +1,69 @@
+# SecondBrain
+
+Local-first, Markdown-centered second brain. Created by the SecondBrain
+installer v{{VERSION}} on {{DATE}}.
+
+```text
+Original documents are evidence.        -> 10-originals/
+Converted Markdown is retrieval substrate. -> 20-converted/
+Curated Markdown is trusted knowledge.  -> 30-curated/
+Basic Memory is structured agent memory. -> 40-agent-memory/
+QMD is lookup.                           -> 70-scripts/search/
+MCP is the agent interface.              -> 70-scripts/mcp/
+Git is the temporal and versioning backbone.
+Obsidian is the human interface.
+```
+
+## Layout
+
+| Folder | Purpose | Trust |
+|---|---|---|
+| `00-inbox/` | Drop zone; files here get ingested and converted | transient |
+| `10-originals/` | Canonical source artifacts — never modified | evidence |
+| `20-converted/` | MarkItDown projections of originals | source-derived, unreviewed |
+| `30-curated/` | Human-reviewed knowledge, decisions, summaries | trusted |
+| `40-agent-memory/` | Agent-written observations and relations | unreviewed until promoted |
+| `50-context-packs/` | Compact task-specific bundles for agents | generated |
+| `60-index-config/` | Schemas, collections, manifests, install state | config |
+| `70-scripts/` | Conversion, search, context, maintenance, MCP | tooling |
+| `80-logs/` | Conversion / indexing / agent-access logs | disposable |
+| `90-archive/` | Cold storage | archived |
+
+## Manual lookup (you)
+
+Open this folder in Obsidian (Open folder as vault). Search in this order:
+`30-curated/decisions` → `30-curated/summaries` → `30-curated/concepts` →
+`40-agent-memory/project-memory` → `20-converted` → `10-originals`.
+Promote anything useful into `30-curated/` and link it back to its sources.
+
+## Agentic lookup (Claude Code, Codex, …)
+
+Agents get scoped tools via the `second-brain` MCP server — staged retrieval
+over curated decisions first, raw conversions last, plus bounded memory
+writes into `40-agent-memory/`. Agents do not crawl the vault.
+
+## Everyday commands
+
+```bash
+# Drop files into 00-inbox/raw-drops, then:
+70-scripts/convert/convert_new_documents.sh
+
+# Search from the command line:
+70-scripts/search/search_curated.sh --query "identity resolution"
+70-scripts/search/search_decisions.sh --query "architecture" --max-results 5
+
+# Build an agent context pack:
+70-scripts/context/build_context_pack.py --topic "identity-resolution" --project introhive
+
+# Housekeeping:
+70-scripts/maintenance/validate_frontmatter.py
+70-scripts/maintenance/find_unreviewed_conversions.py
+```
+
+## Rules the tooling enforces
+
+- Originals are never modified or overwritten; duplicates are detected by checksum.
+- Converted Markdown is regenerable and carries `review_status: unreviewed`
+  frontmatter until a human reviews it.
+- Agents write only to `40-agent-memory/` and `50-context-packs/`.
+- Nothing pushes to a remote or deletes notes without a human doing it.

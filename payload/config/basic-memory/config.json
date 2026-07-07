@@ -1,0 +1,7 @@
+{
+  "comment": "SecondBrain reference config. The installer registers the project via `basic-memory project add second-brain <vault>/40-agent-memory`; this file records the intended layout for repair.",
+  "project_name": "second-brain",
+  "project_root": "40-agent-memory",
+  "writable": true,
+  "notes": "Basic Memory must never point at 10-originals, 20-converted, or 30-curated (spec §20)."
+}

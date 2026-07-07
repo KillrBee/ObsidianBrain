@@ -1,0 +1,16 @@
+# Frontmatter schema: context packs (spec §14)
+$schema: "http://json-schema.org/draft-07/schema#"
+title: context_pack
+type: object
+required: [title, doc_type, created, review_status]
+properties:
+  title: {type: string}
+  doc_type: {const: context_pack}
+  created: {type: string}
+  updated: {type: [string, "null"]}
+  project: {type: [string, "null"]}
+  topic: {type: [string, "null"]}
+  max_token_target: {type: number}
+  source_notes: {type: array, items: {type: string}}
+  review_status: {enum: [generated, reviewed]}
+  tags: {type: array, items: {type: string}}

@@ -1,0 +1,19 @@
+# Frontmatter schema: decision notes (spec §7.3)
+$schema: "http://json-schema.org/draft-07/schema#"
+title: decision
+type: object
+required: [title, doc_type, decision_type, created, status]
+properties:
+  title: {type: string}
+  doc_type: {const: decision}
+  decision_type: {enum: [architecture, product, process, data, agentic_workflow]}
+  created: {type: string}
+  updated: {type: [string, "null"]}
+  project: {type: [string, "null"]}
+  status: {enum: [proposed, accepted, rejected, superseded]}
+  decision_owner: {type: [string, "null"]}
+  source_files: {type: array, items: {type: string}}
+  confidence: {enum: [low, medium, high]}
+  supersedes: {type: array, items: {type: string}}
+  superseded_by: {type: [string, "null"]}
+  tags: {type: array, items: {type: string}}

@@ -1,0 +1,26 @@
+# MEMORY.md — agent entry point
+
+This vault is a second brain with a strict trust model. If you are an agent
+reading this: do not crawl the tree. Use the `second-brain` MCP tools or the
+scripts under `70-scripts/search/`.
+
+## Retrieval order (always)
+
+1. `search_decisions` — accepted decisions beat everything else
+2. `search_curated` — human-reviewed synthesis
+3. `read_context_pack` — prebuilt task bundles in `50-context-packs/active/`
+4. `search_agent_memory` — machine memory (unreviewed unless marked)
+5. `search_sources` — converted documents (`trust_level: source-derived`)
+6. Originals in `10-originals/` only when conversion is ambiguous — via a human
+
+## Trust rules
+
+- `review_status: unreviewed` means *not fact* — cite it as source-derived.
+- Prefer `status: active` + `confidence: high` notes; skip superseded notes.
+- Write observations to `40-agent-memory/` via the memory tools; never edit
+  `30-curated/` or `10-originals/`.
+
+## Memory index
+
+- [Agent memory index](40-agent-memory/MEMORY.md) — durable observations,
+  relations, constraints, preferences, lessons learned.

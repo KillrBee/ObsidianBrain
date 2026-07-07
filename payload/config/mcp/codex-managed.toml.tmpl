@@ -1,0 +1,13 @@
+# Reference template (spec §18). The installer maintains exactly this block
+# inside ~/.codex/config.toml between managed-block markers, leaving all user
+# settings untouched.
+
+# >>> second-brain managed block (do not edit inside) >>>
+[mcp_servers.second-brain]
+command = "{{VAULT_DIR}}/70-scripts/mcp/second-brain-mcp"
+args = []
+
+[mcp_servers.basic-memory]
+command = "uvx"
+args = ["basic-memory", "mcp"]
+# <<< second-brain managed block <<<

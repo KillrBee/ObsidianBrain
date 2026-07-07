@@ -1,0 +1,15 @@
+# Agent memory index
+
+One fact per file. Subfolders by memory type:
+
+- `daily/` — session notes, `YYYY-MM-DD.md`
+- `project-memory/` — durable per-project state
+- `constraints/` — hard rules the user has set
+- `preferences/` — how the user likes things done
+- `observations/` — atomic observations (`memory_type: observation`)
+- `relations/` — links between entities (`memory_type: relation`)
+- `lessons-learned/` — postmortems and corrections
+
+Every note carries `doc_type: agent_memory` frontmatter and starts life as
+`review_status: unreviewed`. A human promotes durable knowledge into
+`30-curated/` — agents never do that themselves.

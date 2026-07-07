@@ -1,0 +1,20 @@
+# Frontmatter schema: curated notes (spec §7.2)
+$schema: "http://json-schema.org/draft-07/schema#"
+title: curated_synthesis
+type: object
+required: [title, doc_type, created, trust_level, review_status, status]
+properties:
+  title: {type: string}
+  doc_type: {const: curated_synthesis}
+  created: {type: string}
+  updated: {type: [string, "null"]}
+  project: {type: [string, "null"]}
+  domain: {type: array, items: {type: string}}
+  status: {enum: [active, deprecated, superseded, archived]}
+  trust_level: {enum: [human-reviewed]}
+  review_status: {enum: [reviewed, unreviewed]}
+  source_files: {type: array, items: {type: string}}
+  confidence: {enum: [low, medium, high]}
+  supersedes: {type: array, items: {type: string}}
+  superseded_by: {type: [string, "null"]}
+  tags: {type: array, items: {type: string}}

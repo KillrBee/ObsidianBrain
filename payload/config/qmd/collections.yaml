@@ -1,0 +1,35 @@
+# QMD collection definitions (spec §13.1). The ripgrep fallback backend and
+# the context-pack builder read this file directly; when a real QMD binary is
+# installed, update_qmd_indexes.sh --register mirrors it into QMD.
+#
+# search_priority: agent-facing retrieval order (spec §13.2).
+search_priority:
+  - decisions
+  - curated
+  - context-packs
+  - core-memory
+  - projects
+  - sources-converted
+
+collections:
+  core-memory:
+    globs:
+      - "MEMORY.md"
+      - "40-agent-memory/**/*.md"
+  curated:
+    globs:
+      - "30-curated/**/*.md"
+  decisions:
+    globs:
+      - "30-curated/decisions/**/*.md"
+  projects:
+    globs:
+      - "30-curated/projects/**/*.md"
+      - "30-curated/systems/**/*.md"
+      - "30-curated/playbooks/**/*.md"
+  sources-converted:
+    globs:
+      - "20-converted/**/*.md"
+  context-packs:
+    globs:
+      - "50-context-packs/**/*.md"

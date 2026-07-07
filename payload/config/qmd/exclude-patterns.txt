@@ -1,0 +1,19 @@
+# Never index or return these (spec §22). One fnmatch pattern per line;
+# matched against basenames and every path segment.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.mobileprovision
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+secrets.*
+credentials.*
+node_modules
+.venv
+.git
+.obsidian
+90-archive

@@ -1,0 +1,13 @@
+{
+  "_comment": "Reference template (spec §19). The installer merges these entries into <vault>/.mcp.json — and optionally user scope via `claude mcp add` — preserving anything else in the file.",
+  "mcpServers": {
+    "second-brain": {
+      "command": "{{VAULT_DIR}}/70-scripts/mcp/second-brain-mcp",
+      "args": []
+    },
+    "basic-memory": {
+      "command": "uvx",
+      "args": ["basic-memory", "mcp"]
+    }
+  }
+}

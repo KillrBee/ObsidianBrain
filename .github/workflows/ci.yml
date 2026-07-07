@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tooling
+        run: brew install bats-core shellcheck jq ripgrep fd uv
+
+      - name: Dev environment
+        run: make install-dev
+
+      - name: Lint
+        run: make lint
+
+      - name: Tests
+        run: make test
+        env:
+          SB_TEST_PYTHON: ${{ github.workspace }}/.venv/bin/python

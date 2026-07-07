@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "existing": {
+      "command": "/usr/bin/existing",
+      "args": ["--keep-me"]
+    }
+  },
+  "userSetting": "preserve-this"
+}

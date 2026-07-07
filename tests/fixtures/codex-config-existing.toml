@@ -1,0 +1,10 @@
+# Pre-existing user Codex config — the installer must preserve every line.
+model = "gpt-5-codex"
+approval_policy = "on-request"
+
+[mcp_servers.existing-server]
+command = "/usr/local/bin/existing"
+args = ["--flag", "value"]
+
+[projects."/Users/example/work"]
+trust_level = "trusted"

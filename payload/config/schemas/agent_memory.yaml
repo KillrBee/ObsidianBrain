@@ -1,0 +1,17 @@
+# Frontmatter schema: agent memory notes (spec §7.4)
+$schema: "http://json-schema.org/draft-07/schema#"
+title: agent_memory
+type: object
+required: [title, doc_type, memory_type, created, review_status]
+properties:
+  title: {type: string}
+  doc_type: {const: agent_memory}
+  created: {type: string}
+  updated: {type: [string, "null"]}
+  memory_type: {enum: [observation, relation, preference, constraint, project_state, lesson]}
+  project: {type: [string, "null"]}
+  confidence: {enum: [low, medium, high]}
+  source: {type: [string, "null"]}
+  agent: {type: [string, "null"]}
+  review_status: {enum: [unreviewed, reviewed]}
+  tags: {type: array, items: {type: string}}
