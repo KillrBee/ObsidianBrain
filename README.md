@@ -1,5 +1,7 @@
 # SecondBrain Installer
 
+[![ci](https://github.com/KillrBee/ObsidianBrain/actions/workflows/ci.yml/badge.svg)](https://github.com/KillrBee/ObsidianBrain/actions/workflows/ci.yml)
+
 One-command macOS setup for an Obsidian-based second brain with agentic
 retrieval: MarkItDown conversion, scoped search collections, Basic Memory,
 and MCP integration for Claude Code and Codex.
@@ -18,7 +20,7 @@ Obsidian is the human interface.
 ## Install
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/KillrBee/ObsidianBrain.git
 cd ObsidianBrain
 ./install.sh                    # defaults: vault at ~/SecondBrain
 ./install.sh --mode interactive # guided configuration
