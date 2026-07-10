@@ -308,12 +308,14 @@ uninstall/repair/upgrade paths finished, README + curl-install instructions, tag
 
 ## 6. Risks & open items
 
-- **R1 — QMD availability/CLI surface (blocking Milestone 2 design detail only).** The spec cites
-  OpenClaw's QMD docs; the exact install method (brew? npm? binary?) and JSON-output flags must be
-  verified at implementation time. Mitigation is already designed in: the search contract lives in
-  our wrappers, and the ripgrep backend keeps every downstream consumer (MCP tools, context packs,
-  tests) working if QMD integration slips. Action: spike QMD install + `--json` search in
-  Milestone 2, day 1.
+- **R1 — QMD availability/CLI surface. RESOLVED 2026-07-10.** QMD is
+  [tobi/qmd](https://github.com/tobi/qmd), npm package `@tobilu/qmd` (verified v2.5.3).
+  Integration facts: `qmd collection add <path> --name sb-<n> --mask <glob>` (brace masks work
+  for multi-glob collections; config in `$XDG_CONFIG_HOME/qmd/index.yml`), `qmd update` to
+  re-index, `qmd search <q> -c <name> --json -n <k>` returns
+  `[{docid, score, file: "qmd://<coll>/<rel>", line, title, snippet}]`. Quirk: qmd exits 0 even
+  on errors, so backend fallback keys on stdout-not-JSON, not exit codes. The ripgrep fallback
+  remains for qmd-less installs and unregistered collections.
 - **R2 — MarkItDown extras weight.** `markitdown[all]` drags in heavy deps (ffmpeg/OCR chains).
   Install `[pdf,docx,pptx,xlsx]` by default; `--with-ocr` adds tesseract+poppler, `--with-transcription`
   adds ffmpeg — matching spec §17's optional list.

@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 import shutil
 import subprocess
@@ -93,6 +94,30 @@ def _snippet(body: str, terms: list[str]) -> str:
     return chosen[:240]
 
 
+def _trust_adjust(meta: dict) -> float:
+    """Spec §9.2 preferences as ranking adjustments, shared by both backends
+    so reviewed/accepted notes outrank superseded ones regardless of engine."""
+    adj = 0.0
+    if meta.get("trust_level") == "human-reviewed":
+        adj += 0.6
+    if meta.get("review_status") == "reviewed":
+        adj += 0.4
+    if meta.get("status") == "accepted":
+        adj += 0.4
+    if meta.get("confidence") == "high":
+        adj += 0.2
+    if meta.get("status") in ("superseded", "deprecated", "archived", "rejected"):
+        adj -= 1.0
+    if meta.get("superseded_by"):
+        adj -= 1.0
+    return adj
+
+
+def _squash(raw: float) -> float:
+    raw = max(raw, 0.01)
+    return round(raw / (raw + 3.0), 4)
+
+
 def _score(meta: dict, title: str, body_low: str, terms: list[str]) -> float:
     tf = sum(body_low.count(t) for t in terms)
     title_low = title.lower()
@@ -102,21 +127,7 @@ def _score(meta: dict, title: str, body_low: str, terms: list[str]) -> float:
     if tf + title_hits + tag_hits == 0:
         return 0.0
     raw = math.log1p(tf) + 2.0 * title_hits + 1.0 * tag_hits
-    # Trust preferences (spec §9.2) as ranking bonuses:
-    if meta.get("trust_level") == "human-reviewed":
-        raw += 0.6
-    if meta.get("review_status") == "reviewed":
-        raw += 0.4
-    if meta.get("status") == "accepted":
-        raw += 0.4
-    if meta.get("confidence") == "high":
-        raw += 0.2
-    if meta.get("status") in ("superseded", "deprecated", "archived", "rejected"):
-        raw -= 1.0
-    if meta.get("superseded_by"):
-        raw -= 1.0
-    raw = max(raw, 0.01)
-    return round(raw / (raw + 3.0), 4)
+    return _squash(raw + _trust_adjust(meta))
 
 
 def internal_search(vault: Path, query: str, collection: str,
@@ -157,46 +168,79 @@ def internal_search(vault: Path, query: str, collection: str,
 
 
 # ---------------------------------------------------------------- qmd -------
+# Backend: tobi/qmd (npm @tobilu/qmd). Vault collections are registered as
+# sb-<name> (see update_qmd_indexes.sh). Two CLI quirks handled here:
+# qmd exits 0 even on errors ("Collection not found: …"), so failure is
+# detected by stdout not parsing as JSON; and result paths come back as
+# qmd://<collection>/<vault-relative-path> URIs.
+
+def _qmd_bin() -> str | None:
+    return os.environ.get("SB_QMD_BIN") or shutil.which("qmd")
+
+
+def _qmd_rel_path(file_uri: str) -> str:
+    if file_uri.startswith("qmd://"):
+        rest = file_uri[len("qmd://"):]
+        return rest.split("/", 1)[1] if "/" in rest else rest
+    return file_uri
+
+
 def qmd_search(vault: Path, query: str, collection: str,
-               max_results: int) -> list[dict] | None:
-    """Best-effort QMD invocation; None means fall back to internal."""
-    qmd = shutil.which("qmd")
+               project: str | None = None, domain: str | None = None,
+               status: str | None = None, max_results: int = 10) -> list[dict] | None:
+    """QMD-backed search mapped onto the wrapper contract; None -> fall back
+    to the internal backend."""
+    qmd = _qmd_bin()
     if not qmd:
         return None
+    # Over-fetch when post-filters will discard hits.
+    fetch = max_results * 2 if (project or domain or status) else max_results
+    fetch = min(fetch, MAX_RESULTS_CAP)
     try:
         proc = subprocess.run(
-            [qmd, "search", query, "--collection", collection,
-             "--json", "--limit", str(max_results)],
+            [qmd, "search", query, "-c", f"sb-{collection}",
+             "--json", "-n", str(fetch)],
             capture_output=True, timeout=60, cwd=str(vault),
         )
-        if proc.returncode != 0:
-            return None
-        payload = json.loads(proc.stdout.decode())
+        raw = json.loads(proc.stdout.decode())
     except Exception:
         return None
-    raw = payload.get("results", payload) if isinstance(payload, dict) else payload
+    if isinstance(raw, dict):
+        raw = raw.get("results")
     if not isinstance(raw, list):
         return None
+
+    terms = tokenize(query)
+    excludes = sb_vault.load_excludes(vault)
     results = []
-    for item in raw[:max_results]:
+    for item in raw:
         if not isinstance(item, dict):
             continue
-        path = item.get("path") or item.get("file") or ""
-        meta = {}
-        abs_path = vault / path
+        rel = _qmd_rel_path(str(item.get("file") or item.get("path") or ""))
+        # QMD indexes whatever its mask matches; our exclusion rules (spec §22)
+        # and trust ranking (spec §9.2) are enforced here, on the way out.
+        if sb_vault.is_excluded(Path(rel), excludes):
+            continue
+        meta: dict = {}
+        body = ""
+        abs_path = vault / rel
         if abs_path.is_file():
-            meta, _ = sb_frontmatter.read_note(abs_path)
-            meta = meta or {}
+            m, body = sb_frontmatter.read_note(abs_path)
+            meta = m or {}
+        if not _passes_filters(meta, project, domain, status):
+            continue
         results.append({
-            "path": path,
-            "title": item.get("title") or meta.get("title") or Path(path).stem,
-            "score": float(item.get("score", 0.0)),
-            "snippet": item.get("snippet") or item.get("preview") or "",
+            "path": rel,
+            "title": item.get("title") or meta.get("title") or Path(rel).stem,
+            "score": _squash(max(float(item.get("score") or 0.0), 0.0)
+                             + _trust_adjust(meta)),
+            "snippet": _snippet(body, terms) if body else "",
             "trust_level": meta.get("trust_level"),
             "review_status": meta.get("review_status"),
             "source_file": meta.get("source_file"),
         })
-    return results
+    results.sort(key=lambda r: (-r["score"], r["path"]))
+    return results[:max_results]
 
 
 # ---------------------------------------------------------------- api -------
@@ -219,7 +263,8 @@ def search(vault: Path, query: str, collection: str, project: str | None = None,
     used_backend = "internal"
     results: list[dict] | None = None
     if backend in ("auto", "qmd") and collection != "all":
-        results = qmd_search(vault, query, collection, max_results)
+        results = qmd_search(vault, query, collection, project, domain,
+                             status, max_results)
         if results is not None:
             used_backend = "qmd"
     if results is None:

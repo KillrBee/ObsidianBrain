@@ -55,6 +55,10 @@ EOF
   # A secret-looking file that must NEVER surface.
   printf -- '---\ntitle: creds\n---\nsurvivorship password hunter2\n' \
     >"$VAULT/30-curated/concepts/credentials.md"
+
+  # Notes added outside the conversion pipeline need an index refresh before
+  # an indexed backend can see them (no-op without qmd).
+  "$VAULT/70-scripts/index/update_qmd_indexes.sh" --vault "$VAULT" >/dev/null 2>&1 || true
 }
 teardown() { test_env_teardown; }
 

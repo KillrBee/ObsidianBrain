@@ -11,6 +11,12 @@ test_env_setup() {
   mkdir -p "$HOME"
   export VAULT="$SB_TEST_ROOT/vault"
 
+  # XDG-respecting tools (qmd among them) must never touch real user config.
+  export XDG_CONFIG_HOME="$SB_TEST_ROOT/xdg/config"
+  export XDG_CACHE_HOME="$SB_TEST_ROOT/xdg/cache"
+  export XDG_DATA_HOME="$SB_TEST_ROOT/xdg/data"
+  mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME" "$XDG_DATA_HOME"
+
   # Skip anything that touches the real machine.
   export SB_SKIP_BREW=1 SB_SKIP_TOOLS=1 SB_SKIP_OBSIDIAN=1
 

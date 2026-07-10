@@ -57,13 +57,21 @@ stating what was installed, verified, configured, skipped, or failed.
   (managed block in `~/.codex/config.toml`)
 - Basic Memory pointed at `40-agent-memory/` only
 
-### Search backends (QMD note)
+### Search backends
 
-Wrapper scripts guarantee the JSON contract regardless of backend. When a
-`qmd` binary is on PATH it is used per collection; otherwise a built-in
-ripgrep-based scorer over the same `collections.yaml` takes over. Set
-`SB_QMD_INSTALL_CMD` before installing to have the installer install QMD
-your preferred way.
+The primary lookup layer is [tobi/qmd](https://github.com/tobi/qmd)
+(`npm install -g @tobilu/qmd`, done by the installer). Vault collections are
+mirrored into QMD under an `sb-` prefix (`sb-curated`, `sb-decisions`, …) so
+they never collide with your own QMD collections; `qmd update` runs after
+each conversion batch. The wrappers call `qmd search … --json` (BM25 — no
+model downloads); run `qmd embed` yourself to enable `qmd query`
+hybrid/vector search, and `qmd mcp` if you also want QMD's native MCP tools.
+
+Wrapper scripts guarantee the same JSON contract regardless of backend: if
+`qmd` is missing or a collection isn't registered, a built-in ripgrep-based
+scorer over the same `collections.yaml` takes over transparently. Set
+`SB_QMD_INSTALL_CMD` to override how the installer installs QMD, or
+`SB_QMD_BIN` to point at a specific binary.
 
 ## Development
 

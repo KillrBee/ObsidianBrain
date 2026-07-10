@@ -115,6 +115,7 @@ if [ "$SB_UNINSTALL" = "1" ]; then
   sb_step "Uninstall (managed configuration only)"
   uninstall_mcp_claude
   uninstall_mcp_codex
+  uninstall_qmd
   sb_info "The vault at $SB_VAULT_DIR was NOT touched."
   sb_info "To remove it entirely (this deletes your notes!):"
   sb_info "  rm -rf \"$SB_VAULT_DIR\""
