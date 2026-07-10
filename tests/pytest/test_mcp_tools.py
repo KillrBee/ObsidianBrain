@@ -26,6 +26,8 @@ SPEC_TOOLS = {
     "convert_new_documents", "reconvert_document", "update_indexes",
     "validate_frontmatter", "find_unreviewed_conversions",
     "find_stale_context_packs", "find_superseded_notes",
+    # anti-bloat additions
+    "find_duplicate_memory",
 }
 
 FORBIDDEN = {
@@ -90,6 +92,25 @@ def test_curated_write_rejected_through_server(server):
     import policy
     with pytest.raises(policy.PolicyError):
         server.write_agent_memory_note("30-curated/concepts/hack.md", "nope")
+
+
+def test_duplicate_refusal_and_force_through_server(server):
+    import policy
+    server.write_agent_memory_note(
+        "40-agent-memory/observations/api-rate-limits.md",
+        "---\ntitle: API rate limits\n---\nUpstream API caps at 100 rps per key.")
+    with pytest.raises(policy.DuplicateMemoryError):
+        server.write_agent_memory_note(
+            "40-agent-memory/observations/api-rate-limits-notes.md",
+            "---\ntitle: API rate limits notes\n---\nThe API caps at 100 rps.")
+    out = server.write_agent_memory_note(
+        "40-agent-memory/observations/api-rate-limits-notes.md",
+        "---\ntitle: API rate limits notes\n---\nThe API caps at 100 rps.",
+        force=True)
+    assert out["review_status"] == "unreviewed"
+    report = server.find_duplicate_memory()
+    assert any("api-rate-limits.md" in p for c in report["clusters"]
+               for p in c["paths"])
 
 
 def test_reconvert_rejects_non_original_paths(server):

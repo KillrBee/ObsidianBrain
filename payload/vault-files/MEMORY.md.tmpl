@@ -20,6 +20,19 @@ scripts under `70-scripts/search/`.
 - Write observations to `40-agent-memory/` via the memory tools; never edit
   `30-curated/` or `10-originals/`.
 
+## Memory discipline (anti-bloat)
+
+- Search before write: `find_relevant_notes` / `search_agent_memory` first.
+- Append over create: `append_observation` / `append_relation` keep one note
+  per entity. `write_agent_memory_note` is for new topics only and refuses
+  near-duplicates — append to the note it names instead.
+- Update over correct: rewrite the same note when a fact changes; use
+  `superseded_by` for true replacements. No correction notes, no transcripts.
+- Link, don't copy: `[[wikilinks]]` to curated notes and sources, never
+  pasted content. One fact per file.
+- Durable cross-project knowledge lives HERE; per-project memory files hold
+  repo mechanics plus a pointer to the vault note, not a copy.
+
 ## Memory index
 
 - [Agent memory index](40-agent-memory/MEMORY.md) — durable observations,

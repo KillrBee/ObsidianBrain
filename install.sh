@@ -28,6 +28,7 @@ SB_WITH_OCR="${SB_WITH_OCR:-0}"
 SB_WITH_TRANSCRIPTION="${SB_WITH_TRANSCRIPTION:-0}"
 SB_SKIP_OBSIDIAN="${SB_SKIP_OBSIDIAN:-0}"
 SB_NO_MCP="${SB_NO_MCP:-0}"
+SB_NO_AGENT_GUIDES="${SB_NO_AGENT_GUIDES:-0}"
 SB_CLAUDE_SCOPE="${SB_CLAUDE_SCOPE:-project}"
 
 usage() {
@@ -45,6 +46,7 @@ Options:
   --with-transcription         install ffmpeg + markitdown audio extras
   --skip-obsidian              do not install the Obsidian app
   --no-mcp                     skip Claude Code and Codex MCP configuration
+  --no-agent-guides            skip user-scope memory-routing guides and skill
   --claude-scope SCOPE         project|user|both|skip (default: project)
   --version                    print installer version
   -h, --help                   this help
@@ -66,6 +68,7 @@ while [ $# -gt 0 ]; do
     --with-transcription) SB_WITH_TRANSCRIPTION=1 ;;
     --skip-obsidian) SB_SKIP_OBSIDIAN=1 ;;
     --no-mcp) SB_NO_MCP=1 ;;
+    --no-agent-guides) SB_NO_AGENT_GUIDES=1 ;;
     --claude-scope) SB_CLAUDE_SCOPE="${2:?--claude-scope needs a value}"; shift ;;
     --claude-scope=*) SB_CLAUDE_SCOPE="${1#*=}" ;;
     --version) echo "$SB_VERSION"; exit 0 ;;
@@ -87,7 +90,7 @@ SB_REPORT_ROWS="$(mktemp -t secondbrain-report-rows)"
 trap 'rm -f "$SB_REPORT_ROWS" "$SB_LOG_FILE"' EXIT
 SB_STATE_FILE="$SB_VAULT_DIR/60-index-config/install-state.json"
 
-for mod in common checks brew deps obsidian vault payload markitdown qmd basic_memory mcp_claude mcp_codex validate report; do
+for mod in common checks brew deps obsidian vault payload markitdown qmd basic_memory mcp_claude mcp_codex agent_guides validate report; do
   # shellcheck source=/dev/null
   . "$SB_INSTALLER_ROOT/lib/$mod.sh"
 done
@@ -108,6 +111,7 @@ if [ "$SB_MODE" = "interactive" ] && [ "$SB_UNINSTALL" != "1" ]; then
   else
     SB_NO_MCP=1
   fi
+  ask_yn "Install user-scope memory-routing guides for agents (CLAUDE.md/AGENTS.md managed blocks + skill)" "y" || SB_NO_AGENT_GUIDES=1
 fi
 
 # --------------------------------------------------------------- uninstall --
@@ -116,6 +120,7 @@ if [ "$SB_UNINSTALL" = "1" ]; then
   uninstall_mcp_claude
   uninstall_mcp_codex
   uninstall_qmd
+  uninstall_agent_guides
   sb_info "The vault at $SB_VAULT_DIR was NOT touched."
   sb_info "To remove it entirely (this deletes your notes!):"
   sb_info "  rm -rf \"$SB_VAULT_DIR\""
@@ -144,6 +149,7 @@ step_run "QMD collections"              step_qmd_collections
 step_run "Basic Memory"                 step_basic_memory
 step_run "Claude Code MCP"              step_mcp_claude
 step_run "Codex MCP"                    step_mcp_codex
+step_run "Agent memory-routing guides"  step_agent_guides
 step_run "Validation"                   step_validate
 
 step_report

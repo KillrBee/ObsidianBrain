@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 import sb_frontmatter  # noqa: E402
 import sb_manifest  # noqa: E402
 import sb_schemas  # noqa: E402
+import sb_similarity  # noqa: E402
 import sb_vault  # noqa: E402
 
 READ_ALLOW = ("20-converted", "30-curated", "40-agent-memory",
@@ -34,6 +35,12 @@ READ_CAP_BYTES = 512 * 1024
 
 class PolicyError(PermissionError):
     """Raised when a request falls outside the allowed boundaries."""
+
+
+class DuplicateMemoryError(PolicyError):
+    """Raised when creating a memory note that near-duplicates an existing
+    one. Append/update the existing note, or pass force=True if the topic is
+    genuinely distinct."""
 
 
 def _resolve(vault: Path, rel_path: str) -> Path:
@@ -131,8 +138,29 @@ def _stamp_memory_meta(meta: dict, defaults: dict) -> dict:
     return merged
 
 
+def find_similar_memory(vault: Path, rel_path: str, meta: dict | None,
+                        body: str) -> list[dict]:
+    """Existing memory notes that look like duplicates of the candidate.
+    Index files (MEMORY.md) are exempt."""
+    matches = []
+    root = vault / "40-agent-memory"
+    for existing in sorted(root.rglob("*.md")):
+        ex_rel = str(existing.relative_to(vault))
+        if existing.name == "MEMORY.md" or ex_rel == rel_path:
+            continue
+        ex_meta, ex_body = sb_frontmatter.read_note(existing)
+        reason = sb_similarity.similarity(meta, body, rel_path,
+                                          ex_meta, ex_body, ex_rel)
+        if reason:
+            matches.append({"path": ex_rel,
+                            "title": (ex_meta or {}).get("title"),
+                            "reason": reason})
+    return matches
+
+
 def write_agent_memory_note(vault: Path, rel_path: str, content: str,
-                            agent: str | None = None) -> dict:
+                            agent: str | None = None,
+                            force: bool = False) -> dict:
     target = check_write(vault, rel_path)
     if not rel_path.startswith("40-agent-memory/"):
         raise PolicyError("memory notes must live under 40-agent-memory/")
@@ -146,11 +174,24 @@ def write_agent_memory_note(vault: Path, rel_path: str, content: str,
         "agent": agent,
         "tags": [],
     })
+    # Anti-duplication guard: creating a NEW file that near-duplicates an
+    # existing note is refused; updating an existing note is always allowed
+    # (that is the behavior we want to encourage).
+    if not target.exists() and not force:
+        dupes = find_similar_memory(vault, rel_path, meta, body)
+        if dupes:
+            listing = "; ".join(f"{d['path']} ({d['reason']})" for d in dupes[:3])
+            raise DuplicateMemoryError(
+                f"suspected duplicate of existing memory: {listing}. "
+                f"Update that note (write to its path) or use "
+                f"append_observation; pass force=true only if the topic is "
+                f"genuinely distinct.")
     errors = sb_schemas.validate(vault, meta)
     if errors:
         raise ValueError(f"frontmatter failed agent_memory schema: {errors}")
     sb_frontmatter.write_note(target, meta, body)
-    sb_vault.log_access(vault, "write_agent_memory_note", path=rel_path, agent=agent)
+    sb_vault.log_access(vault, "write_agent_memory_note", path=rel_path,
+                        agent=agent, forced=bool(force))
     return {"path": rel_path, "review_status": "unreviewed"}
 
 
@@ -247,7 +288,9 @@ def selftest(vault: Path) -> int:
     write_agent_memory_note(vault, rel, "Selftest observation body.", agent="selftest")
     note = read_note(vault, rel)
     assert note["frontmatter"]["review_status"] == "unreviewed"
-    append_observation(vault, "policy-selftest-entity", "selftest ran", "high")
+    # Entity name shares no title tokens with the note above, so fresh vaults
+    # do not ship a benign cluster in the find_duplicate_memory report.
+    append_observation(vault, "installer validation entity", "selftest ran", "high")
     for should_fail, fn in [
         ("write to curated", lambda: check_write(vault, "30-curated/concepts/x.md")),
         ("write to originals", lambda: check_write(vault, "10-originals/pdf/x.md")),

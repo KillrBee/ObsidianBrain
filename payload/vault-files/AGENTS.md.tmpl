@@ -1,0 +1,35 @@
+# AGENTS.md — rules for agents operating in this vault
+
+This folder is a SecondBrain vault ({{VAULT_DIR}}), installer v{{VERSION}}.
+It is a trust-layered knowledge base, not a normal repo. Use the
+`second-brain` MCP tools (or `70-scripts/search/*.sh`) — do not crawl the
+tree, bulk-read folders, or run broad greps across it.
+
+## Trust model (decides what you may cite and touch)
+
+| Area | Meaning | You may |
+|---|---|---|
+| `10-originals/` | evidence, immutable | read metadata via tools only |
+| `20-converted/` | machine projection, unreviewed | search/read, cite as evidence |
+| `30-curated/` | human-reviewed knowledge | search/read, never write |
+| `40-agent-memory/` | machine memory | read and write via memory tools |
+| `50-context-packs/` | generated task bundles | read; regenerate via tools |
+
+## Non-negotiables
+
+- Retrieval order: decisions → curated → context packs → agent memory →
+  converted sources. `review_status: unreviewed` is a lead, not a fact;
+  skip notes with `superseded_by` set.
+- Search before writing memory; append to existing entity notes
+  (`append_observation` / `append_relation`) rather than creating new files.
+  `write_agent_memory_note` refuses near-duplicates — append to the note it
+  names instead of forcing.
+- Update notes in place when facts change; no "correction" notes, no
+  conversation transcripts, no copies of curated content (link with
+  `[[wikilinks]]` instead).
+- Never modify originals, curated notes, or the conversion manifest. Never
+  delete. Never `git commit` or push here without an explicit human request.
+- Everything you write stays `unreviewed` until the human promotes it.
+
+The full discipline lives in the `second-brain` skill
+(`60-index-config/skills/second-brain/SKILL.md`) and [MEMORY.md](MEMORY.md).

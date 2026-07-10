@@ -1,0 +1,19 @@
+## SecondBrain memory routing
+
+A SecondBrain vault at `{{VAULT_DIR}}` is the single durable memory across
+projects (MCP servers: `second-brain`, `basic-memory`).
+
+- Durable, cross-project knowledge — decisions, people, systems, preferences,
+  lessons, project state — belongs in the vault, not in per-project memory
+  files. Prefer `append_observation` / `append_relation` (one note per
+  entity); use `write_agent_memory_note` only for genuinely new topics.
+- Search before writing: `find_relevant_notes` or `search_agent_memory`
+  first; update or append to an existing note instead of creating a
+  near-duplicate. The write tool refuses suspected duplicates — append to the
+  path it names rather than forcing.
+- Keep project-local memory (CLAUDE.md, AGENTS.md, auto-memory) thin:
+  repo-specific mechanics only. For durable facts, store a one-line pointer
+  to the vault note, not a copy.
+- Retrieval order: `search_decisions` → `search_curated` →
+  `read_context_pack` → `search_agent_memory` → `search_sources`. Content
+  marked `review_status: unreviewed` is a lead, not a fact.

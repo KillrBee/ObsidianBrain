@@ -18,6 +18,7 @@ for sub in ("lib", "search", "context", "maintenance", "mcp"):
     sys.path.insert(0, str(_SCRIPTS / sub))
 
 import build_context_pack as ctx_build  # noqa: E402
+import find_duplicate_memory as maint_duplicates  # noqa: E402
 import find_stale_context_packs as maint_stale  # noqa: E402
 import find_superseded_notes as maint_superseded  # noqa: E402
 import find_unreviewed_conversions as maint_unreviewed  # noqa: E402
@@ -34,10 +35,20 @@ VAULT = sb_vault.vault_root()
 app = FastMCP(
     "second-brain",
     instructions=(
-        "Scoped retrieval over a local second-brain vault. Staged lookup: "
-        "search_decisions and search_curated first, search_sources last. "
-        "Results carry trust_level/review_status — unreviewed content is not "
-        "fact. Writes are limited to agent memory and context packs."
+        "Scoped retrieval over a local second-brain vault — the user's single "
+        "durable memory across projects. Staged lookup: search_decisions and "
+        "search_curated first, search_sources last; results carry "
+        "trust_level/review_status and unreviewed content is a lead, not a "
+        "fact. Memory discipline: search before writing "
+        "(find_relevant_notes/search_agent_memory); prefer append_observation/"
+        "append_relation (one note per entity) over creating files; "
+        "write_agent_memory_note refuses near-duplicates — append to the note "
+        "it names rather than forcing. Update notes in place when facts "
+        "change; store deltas and pointers ([[wikilinks]]), never transcripts "
+        "or copies of curated content. Durable cross-project knowledge "
+        "belongs here; keep per-project memory files to repo mechanics plus a "
+        "pointer. Writes are limited to agent memory and context packs and "
+        "stay unreviewed until a human promotes them."
     ),
 )
 
@@ -186,18 +197,24 @@ def summarize_sources(paths: list[str], target_folder: str = "40-agent-memory/ob
 
 # ------------------------------------------------------------ memory tools --
 @app.tool()
-def write_agent_memory_note(path: str, content: str) -> dict:
-    """Write a Markdown note under 40-agent-memory/. Frontmatter is stamped
-    doc_type: agent_memory, review_status: unreviewed. Curated folders and
-    originals are not writable."""
-    return policy.write_agent_memory_note(VAULT, path, content, agent="mcp")
+def write_agent_memory_note(path: str, content: str, force: bool = False) -> dict:
+    """Create or update a Markdown note under 40-agent-memory/ — for
+    genuinely NEW topics only; prefer append_observation/append_relation for
+    facts about known entities, and write to an existing note's path to
+    update it. Creating a near-duplicate of an existing note is refused with
+    the existing path — append there instead; pass force=true only after
+    confirming the topic is distinct. Frontmatter is stamped doc_type:
+    agent_memory, review_status: unreviewed."""
+    return policy.write_agent_memory_note(VAULT, path, content, agent="mcp",
+                                          force=force)
 
 
 @app.tool()
 def append_observation(entity: str, observation: str, confidence: str = "medium",
                        source: str = "") -> dict:
-    """Append a timestamped observation to the entity's memory note
-    (40-agent-memory/observations/<entity>.md)."""
+    """PREFERRED memory write: append a timestamped observation to the
+    entity's single memory note (40-agent-memory/observations/<entity>.md).
+    One note per entity — this is how memory stays deduplicated."""
     return policy.append_observation(VAULT, entity, observation, confidence,
                                      source or None, agent="mcp")
 
@@ -205,8 +222,9 @@ def append_observation(entity: str, observation: str, confidence: str = "medium"
 @app.tool()
 def append_relation(source_entity: str, relation: str, target_entity: str,
                     confidence: str = "medium", source: str = "") -> dict:
-    """Append a relation (source --relation--> target) to the source entity's
-    memory note (40-agent-memory/relations/<entity>.md)."""
+    """PREFERRED for links between entities: append a relation
+    (source --relation--> target) to the source entity's memory note
+    (40-agent-memory/relations/<entity>.md). One note per entity."""
     return policy.append_relation(VAULT, source_entity, relation, target_entity,
                                   confidence, source or None, agent="mcp")
 
@@ -276,6 +294,13 @@ def find_stale_context_packs() -> dict:
 def find_superseded_notes() -> dict:
     """List superseded notes that should no longer be cited."""
     return maint_superseded.find(VAULT)
+
+
+@app.tool()
+def find_duplicate_memory() -> dict:
+    """Report clusters of suspected duplicate agent-memory notes for human
+    consolidation. Report only — never merge or delete notes yourself."""
+    return maint_duplicates.find(VAULT)
 
 
 # ------------------------------------------------------------------- main ---

@@ -77,6 +77,7 @@ step_vault_tree() {
   # Seed root files from templates only when absent — never clobber user edits.
   _seed_from_template "vault-files/README.md.tmpl" "$SB_VAULT_DIR/README.md"
   _seed_from_template "vault-files/MEMORY.md.tmpl" "$SB_VAULT_DIR/MEMORY.md"
+  _seed_from_template "vault-files/AGENTS.md.tmpl" "$SB_VAULT_DIR/AGENTS.md"
   _seed_from_template "vault-files/agent-memory-MEMORY.md.tmpl" "$SB_VAULT_DIR/40-agent-memory/MEMORY.md"
   _seed_from_template "vault-files/sample-concept.md.tmpl" "$SB_VAULT_DIR/30-curated/concepts/second-brain-overview.md"
   _seed_from_template "vault-files/sample-decision.md.tmpl" "$SB_VAULT_DIR/30-curated/decisions/adopt-second-brain-stack.md"

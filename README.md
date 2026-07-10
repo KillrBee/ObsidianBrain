@@ -52,10 +52,13 @@ stating what was installed, verified, configured, skipped, or failed.
 - Scoped search with a stable JSON contract:
   `70-scripts/search/search_{curated,decisions,sources,agent_memory}.sh`
 - Context packs: `70-scripts/context/build_context_pack.py --topic X`
-- `second-brain` MCP server (24 tools; search/read/context/memory/maintenance)
+- `second-brain` MCP server (25 tools; search/read/context/memory/maintenance)
   wired into Claude Code (`.mcp.json`, optional user scope) and Codex
   (managed block in `~/.codex/config.toml`)
 - Basic Memory pointed at `40-agent-memory/` only
+- Agent memory-routing guides: managed blocks in `~/.claude/CLAUDE.md` and
+  `~/.codex/AGENTS.md`, a `second-brain` skill in `~/.claude/skills/`, and
+  `AGENTS.md`/`MEMORY.md` in the vault (`--no-agent-guides` to opt out)
 
 ### Search backends
 
@@ -88,6 +91,21 @@ Repo layout: `install.sh` + `lib/` is the installer; everything under
 `payload/` is copied into the vault (`payload/scripts` → `70-scripts`,
 `payload/config` → `60-index-config`). `IMPLEMENTATION_PLAN.md` records the
 full design, decision log, and phase mapping.
+
+## Memory discipline (anti-bloat)
+
+The vault is the single durable memory across projects; per-project agent
+memory files should hold repo mechanics plus *pointers*, not copies. This is
+enforced in mechanism, not just prose: `write_agent_memory_note` refuses to
+create a note that near-duplicates an existing one (same filename, title
+overlap, or content-term overlap) and answers with the existing path —
+`append_observation`/`append_relation` keep one note per entity, updates to
+existing paths always pass, and `force=true` is the deliberate escape hatch.
+`find_duplicate_memory` reports anything that still slips through for human
+consolidation. The prose rules (search before write, update over correct,
+deltas not transcripts, link don't copy) live in the vault's `AGENTS.md` and
+`MEMORY.md`, in the `second-brain` skill, and in the managed user-scope
+blocks the installer maintains.
 
 ## Safety model
 
