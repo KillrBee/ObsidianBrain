@@ -34,6 +34,7 @@ sessions). All scripts return JSON and run from any working directory:
 {{VAULT_DIR}}/70-scripts/memory/remember.sh relate "Entity A" depends_on "Entity B"
 {{VAULT_DIR}}/70-scripts/memory/remember.sh note 40-agent-memory/observations/topic.md "content"
 {{VAULT_DIR}}/70-scripts/memory/remember.sh review 40-agent-memory/observations/topic.md
+{{VAULT_DIR}}/70-scripts/memory/remember.sh summarize 20-converted/docx-md/some-doc.md
 
 # Conversion & maintenance
 {{VAULT_DIR}}/70-scripts/convert/convert_new_documents.sh

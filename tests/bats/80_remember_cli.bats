@@ -64,3 +64,12 @@ teardown() { test_env_teardown; }
   [ "$status" -eq 0 ]
   grep -q "review-requested" "$VAULT/40-agent-memory/observations/stdin-note.md"
 }
+
+@test "summarize writes an unreviewed extractive draft into agent memory" {
+  run "$REMEMBER" summarize 30-curated/concepts/second-brain-overview.md
+  [ "$status" -eq 0 ]
+  out_path="$(echo "$output" | "$SB_PYTHON" -c 'import json,sys; print(json.load(sys.stdin)["path"])')"
+  [[ "$out_path" == 40-agent-memory/* ]]
+  grep -q "review_status: unreviewed" "$VAULT/$out_path"
+  grep -q "second-brain-overview" "$VAULT/$out_path"
+}

@@ -56,6 +56,12 @@ def main() -> int:
     p = sub.add_parser("review", help="tag a memory note review-requested")
     p.add_argument("path")
 
+    p = sub.add_parser("summarize",
+                       help="write an extractive draft summary of vault notes into agent memory")
+    p.add_argument("paths", nargs="+",
+                   help="vault-relative note paths (converted or curated)")
+    p.add_argument("--target-folder", default="40-agent-memory/observations")
+
     args = ap.parse_args()
     vault = sb_vault.vault_root(args.vault)
 
@@ -74,6 +80,9 @@ def main() -> int:
             out = policy.append_relation(
                 vault, args.source_entity, args.relation, args.target_entity,
                 args.confidence, args.source, agent="cli")
+        elif args.cmd == "summarize":
+            out = policy.summarize_sources(vault, args.paths,
+                                           args.target_folder, agent="cli")
         else:
             out = policy.mark_memory_for_review(vault, args.path)
     except policy.DuplicateMemoryError as exc:
