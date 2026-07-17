@@ -2,12 +2,17 @@
 # markitdown.sh — MarkItDown CLI + the vault-side Python environment.
 
 # uv_tool_install <spec> <bin> — install a Python CLI tool via uv (pipx fallback).
+# If the default interpreter can't build the tool (e.g. uv defaulting to a
+# Python newer than pyo3 supports — litellm on 3.14), retry pinned to a
+# stable version (SB_TOOL_PYTHON, default 3.12).
 uv_tool_install() {
-  local spec="$1" bin="$2"
+  local spec="$1" bin="$2" pin="${SB_TOOL_PYTHON:-3.12}"
   if sb_have uv; then
     run uv tool install --quiet "$spec" && return 0
     # Already installed via uv tool -> upgrade path keeps it fresh.
     run uv tool upgrade --quiet "$bin" && return 0
+    sb_warn "uv tool install $spec failed; retrying with Python $pin"
+    run uv tool install --quiet --python "$pin" --force "$spec" && return 0
     return 1
   elif sb_have pipx; then
     run pipx install "$spec" >/dev/null 2>&1 || run pipx upgrade "$bin" >/dev/null 2>&1

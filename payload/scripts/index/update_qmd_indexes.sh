@@ -26,6 +26,10 @@ sb_require_vault
 
 QMD_BIN="${SB_QMD_BIN:-}"
 [ -n "$QMD_BIN" ] || QMD_BIN="$(command -v qmd 2>/dev/null || true)"
+# A configured-but-missing binary is "not installed", not an error.
+if [ -n "$QMD_BIN" ] && [ ! -x "$QMD_BIN" ]; then
+  QMD_BIN=""
+fi
 
 log_index() {
   sb_python - "$SB_VAULT_ROOT" "$1" <<'PYEOF'

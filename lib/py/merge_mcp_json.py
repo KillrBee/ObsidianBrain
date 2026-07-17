@@ -4,6 +4,12 @@
 
 Usage:
     merge_mcp_json.py <json_path> <vault_dir> [--remove]
+                      [--basic-memory-bin PATH]
+
+--basic-memory-bin: absolute path to an installed basic-memory binary; using
+it directly avoids uvx re-resolving the environment at session start (which
+can hit build failures the pinned install already solved). Falls back to
+`uvx basic-memory mcp` when omitted.
 
 Exit codes: 0 ok, 1 unexpected error, 2 existing file is invalid JSON.
 """
@@ -14,16 +20,19 @@ import sys
 MANAGED_SERVERS = ("second-brain", "basic-memory")
 
 
-def managed_entries(vault_dir: str) -> dict:
+def basic_memory_entry(bm_bin: str | None) -> dict:
+    if bm_bin:
+        return {"command": bm_bin, "args": ["mcp"]}
+    return {"command": "uvx", "args": ["basic-memory", "mcp"]}
+
+
+def managed_entries(vault_dir: str, bm_bin: str | None = None) -> dict:
     return {
         "second-brain": {
             "command": os.path.join(vault_dir, "70-scripts", "mcp", "second-brain-mcp"),
             "args": [],
         },
-        "basic-memory": {
-            "command": "uvx",
-            "args": ["basic-memory", "mcp"],
-        },
+        "basic-memory": basic_memory_entry(bm_bin),
     }
 
 
@@ -32,7 +41,13 @@ def main() -> int:
         print(__doc__, file=sys.stderr)
         return 1
     path, vault_dir = sys.argv[1], sys.argv[2]
-    remove = "--remove" in sys.argv[3:]
+    rest = sys.argv[3:]
+    remove = "--remove" in rest
+    bm_bin = None
+    if "--basic-memory-bin" in rest:
+        idx = rest.index("--basic-memory-bin")
+        if idx + 1 < len(rest):
+            bm_bin = rest[idx + 1] or None
 
     data: dict = {}
     if os.path.exists(path):
@@ -53,7 +68,7 @@ def main() -> int:
         if not servers:
             data.pop("mcpServers", None)
     else:
-        servers.update(managed_entries(vault_dir))
+        servers.update(managed_entries(vault_dir, bm_bin))
 
     tmp = path + ".tmp"
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)

@@ -33,11 +33,20 @@ step_validate() {
   done
   report_add "validate:files" "verified" "scripts and config in place"
 
-  # 2. Schemas + collections parse; frontmatter validator runs clean on seeds.
-  if "$py" "$SB_VAULT_DIR/70-scripts/maintenance/validate_frontmatter.py" --vault "$SB_VAULT_DIR" >/dev/null 2>&1; then
-    report_add "validate:frontmatter" "verified" "seed notes pass schema validation"
+  # 2. Schemas + collections parse; frontmatter validator runs over the vault.
+  # Invalid USER content is a warning, not an install failure — the validator
+  # exists to feed the review queue, not to block repairs (a broken validator
+  # run itself, e.g. missing schemas, still fails).
+  local fm_out fm_rc=0
+  fm_out="$("$py" "$SB_VAULT_DIR/70-scripts/maintenance/validate_frontmatter.py" --vault "$SB_VAULT_DIR" 2>/dev/null)" || fm_rc=$?
+  if [ "$fm_rc" = "0" ]; then
+    report_add "validate:frontmatter" "verified" "all managed notes pass schema validation"
+  elif printf '%s' "$fm_out" | "$py" -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get("invalid", 0) > 0 else 1)' 2>/dev/null; then
+    local n
+    n="$(printf '%s' "$fm_out" | "$py" -c 'import json,sys; print(json.load(sys.stdin)["invalid"])')"
+    report_add "validate:frontmatter" "warning" "$n note(s) missing/failing frontmatter (content issue, not install) — list with 70-scripts/maintenance/validate_frontmatter.py"
   else
-    report_add "validate:frontmatter" "FAILED" "run 70-scripts/maintenance/validate_frontmatter.py --vault $SB_VAULT_DIR"
+    report_add "validate:frontmatter" "FAILED" "validator could not run — check schemas in 60-index-config/schemas/"
     rc=1
   fi
 

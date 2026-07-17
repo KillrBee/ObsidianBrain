@@ -21,7 +21,8 @@ step_mcp_codex() {
 
   [ -e "$target" ] && backup_file "$target" >/dev/null
   local rc=0
-  sb_python "$SB_INSTALLER_ROOT/lib/py/merge_codex_toml.py" "$target" "$SB_VAULT_DIR" || rc=$?
+  sb_python "$SB_INSTALLER_ROOT/lib/py/merge_codex_toml.py" "$target" "$SB_VAULT_DIR" \
+    --basic-memory-bin "$(sb_basic_memory_bin)" || rc=$?
   case "$rc" in
     0) report_add "codex-mcp" "configured" "managed block in $target" ;;
     2) report_add "codex-mcp" "FAILED" "existing config.toml is invalid TOML; left untouched" ; return 1 ;;

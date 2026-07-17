@@ -99,6 +99,7 @@ report_add() {
   printf '%s|%s|%s\n' "$component" "$status" "$detail" >>"$SB_REPORT_ROWS"
   case "$status" in
     FAILED) sb_err  "$component: $detail" ;;
+    warning) sb_warn "$component: $detail" ;;
     skipped) sb_info "$component: skipped${detail:+ ($detail)}" ;;
     *)      sb_ok   "$component: $status${detail:+ ($detail)}" ;;
   esac

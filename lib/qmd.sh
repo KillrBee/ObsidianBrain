@@ -52,7 +52,7 @@ step_qmd_collections() {
     sb_err "collections.yaml missing — payload step must run first"
     return 1
   fi
-  if [ -n "${SB_QMD_BIN:-}" ] || sb_have qmd; then
+  if { [ -n "${SB_QMD_BIN:-}" ] && [ -x "${SB_QMD_BIN:-}" ]; } || sb_have qmd; then
     if run "$SB_VAULT_DIR/70-scripts/index/update_qmd_indexes.sh" --vault "$SB_VAULT_DIR" --register; then
       report_add "qmd-collections" "configured" "registered as sb-* collections; index built"
     else

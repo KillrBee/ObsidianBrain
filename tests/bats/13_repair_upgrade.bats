@@ -28,6 +28,18 @@ teardown() { test_env_teardown; }
   grep -q "local hack" "$backup"
 }
 
+@test "user notes without frontmatter warn but do not fail the install" {
+  install_default
+  [ "$status" -eq 0 ]
+  printf '# Quick thought\nJust a plain Obsidian note, no frontmatter.\n' \
+    >"$VAULT/30-curated/concepts/quick-thought.md"
+
+  run "$REPO_ROOT/install.sh" --repair --vault-dir "$VAULT" --skip-obsidian --claude-scope project
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"validate:frontmatter"*"content issue, not install"* ]]
+  ! grep -q "validate:frontmatter.*FAILED" <<<"$output"
+}
+
 @test "upgrade leaves the conversion manifest alone" {
   install_default
   [ "$status" -eq 0 ]

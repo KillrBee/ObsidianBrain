@@ -20,8 +20,12 @@ BEGIN = "# >>> second-brain managed block (do not edit inside) >>>"
 END = "# <<< second-brain managed block <<<"
 
 
-def managed_block(vault_dir: str) -> str:
+def managed_block(vault_dir: str, bm_bin: str | None = None) -> str:
     cmd = os.path.join(vault_dir, "70-scripts", "mcp", "second-brain-mcp")
+    if bm_bin:
+        bm_command, bm_args = bm_bin, '["mcp"]'
+    else:
+        bm_command, bm_args = "uvx", '["basic-memory", "mcp"]'
     return (
         f"{BEGIN}\n"
         f"[mcp_servers.second-brain]\n"
@@ -29,8 +33,8 @@ def managed_block(vault_dir: str) -> str:
         f"args = []\n"
         f"\n"
         f"[mcp_servers.basic-memory]\n"
-        f'command = "uvx"\n'
-        f'args = ["basic-memory", "mcp"]\n'
+        f'command = "{bm_command}"\n'
+        f"args = {bm_args}\n"
         f"{END}\n"
     )
 
@@ -51,7 +55,13 @@ def main() -> int:
         print(__doc__, file=sys.stderr)
         return 1
     path, vault_dir = sys.argv[1], sys.argv[2]
-    remove = "--remove" in sys.argv[3:]
+    rest = sys.argv[3:]
+    remove = "--remove" in rest
+    bm_bin = None
+    if "--basic-memory-bin" in rest:
+        idx = rest.index("--basic-memory-bin")
+        if idx + 1 < len(rest):
+            bm_bin = rest[idx + 1] or None
 
     original = ""
     if os.path.exists(path):
@@ -69,7 +79,7 @@ def main() -> int:
         new_text = body
     else:
         sep = "" if not body else ("\n" if body.endswith("\n") else "\n\n")
-        new_text = body + sep + managed_block(vault_dir)
+        new_text = body + sep + managed_block(vault_dir, bm_bin)
 
     try:
         tomllib.loads(new_text)

@@ -6,12 +6,11 @@ load '../helpers/setup_vault'
 
 setup() {
   test_env_setup
-  if [ -z "${SB_QMD_BIN:-}" ]; then
-    if command -v qmd >/dev/null 2>&1; then
-      export SB_QMD_BIN="$(command -v qmd)"
-    else
-      skip "qmd not available (npm install -g @tobilu/qmd, or set SB_QMD_BIN)"
-    fi
+  if [ -z "${SB_QMD_BIN:-}" ] && command -v qmd >/dev/null 2>&1; then
+    export SB_QMD_BIN="$(command -v qmd)"
+  fi
+  if [ -z "${SB_QMD_BIN:-}" ] || [ ! -x "${SB_QMD_BIN}" ]; then
+    skip "qmd not available (npm install -g @tobilu/qmd, or set SB_QMD_BIN)"
   fi
   install_default
   [ "$status" -eq 0 ]
