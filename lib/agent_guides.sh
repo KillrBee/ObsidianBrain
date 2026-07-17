@@ -61,6 +61,8 @@ step_agent_guides() {
 }
 
 _install_skill() {
+  # The skill template carries {{VAULT_DIR}} placeholders so the installed
+  # copy holds real, runnable command paths for this machine.
   local src="$SB_INSTALLER_ROOT/payload/config/skills/second-brain/SKILL.md"
   local dest="$HOME/.claude/skills/second-brain/SKILL.md"
   if [ "${SB_DRY_RUN:-0}" = "1" ]; then
@@ -68,14 +70,19 @@ _install_skill() {
     report_add "agent-guides:skill" "configured" "dry-run"
     return 0
   fi
+  local rendered
+  rendered="$(mktemp -t sb-skill)"
+  render_template "$src" >"$rendered"
   if [ -e "$dest" ]; then
-    if [ "$(_sha256 "$dest")" = "$(_sha256 "$src")" ]; then
+    if [ "$(_sha256 "$dest")" = "$(_sha256 "$rendered")" ]; then
+      rm -f "$rendered"
       report_add "agent-guides:skill" "verified" "second-brain skill up to date"
       return 0
     fi
     backup_file "$dest" >/dev/null
   fi
-  write_file "$dest" 0644 <"$src" || return 1
+  write_file "$dest" 0644 <"$rendered" || { rm -f "$rendered"; return 1; }
+  rm -f "$rendered"
   report_add "agent-guides:skill" "installed" "$dest"
 }
 

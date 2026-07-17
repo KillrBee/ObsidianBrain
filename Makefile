@@ -17,6 +17,7 @@ lint:
 		payload/scripts/index/*.sh \
 		payload/scripts/search/*.sh \
 		payload/scripts/context/*.sh \
+		payload/scripts/memory/*.sh \
 		payload/scripts/mcp/second-brain-mcp \
 		tests/run_tests.sh
 

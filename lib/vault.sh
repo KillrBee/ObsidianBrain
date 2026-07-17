@@ -54,6 +54,7 @@ SB_VAULT_DIRS="
 70-scripts/search
 70-scripts/context
 70-scripts/maintenance
+70-scripts/memory
 70-scripts/mcp
 80-logs/conversion
 80-logs/indexing

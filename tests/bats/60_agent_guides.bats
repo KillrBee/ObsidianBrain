@@ -20,6 +20,9 @@ teardown() { test_env_teardown; }
   grep -qF "$BEGIN_MARK" "$HOME/.codex/AGENTS.md"
   [ -f "$HOME/.claude/skills/second-brain/SKILL.md" ]
   grep -q "name: second-brain" "$HOME/.claude/skills/second-brain/SKILL.md"
+  # Skill is rendered with this machine's real vault path — runnable commands.
+  grep -qF "$VAULT/70-scripts/memory/remember.sh" "$HOME/.claude/skills/second-brain/SKILL.md"
+  ! grep -q "{{VAULT_DIR}}" "$HOME/.claude/skills/second-brain/SKILL.md"
   [ -f "$VAULT/AGENTS.md" ]
   grep -q "trust-layered knowledge base" "$VAULT/AGENTS.md"
 }

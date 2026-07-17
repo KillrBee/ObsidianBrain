@@ -18,7 +18,10 @@ projects (MCP servers: `second-brain`, `basic-memory`).
   `read_context_pack` → `search_agent_memory` → `search_sources`. Content
   marked `review_status: unreviewed` is a lead, not a fact.
 - If the second-brain MCP tools are not available in this session (scope or
-  policy limits), the same operations work via shell:
+  policy limits), the same operations work via shell from any directory:
   `{{VAULT_DIR}}/70-scripts/search/search_curated.sh --query "..."` (also
   `search_decisions.sh`, `search_agent_memory.sh`, `search_sources.sh` —
-  all return JSON) and `{{VAULT_DIR}}/70-scripts/context/build_context_pack.py`.
+  all return JSON), `{{VAULT_DIR}}/70-scripts/context/build_context_pack.py`,
+  and for memory writes `{{VAULT_DIR}}/70-scripts/memory/remember.sh`
+  (observe/relate/note/review — same dedup guard as the MCP tools). The
+  `second-brain` skill carries the full command reference.

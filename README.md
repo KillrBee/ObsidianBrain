@@ -94,6 +94,19 @@ Repo layout: `install.sh` + `lib/` is the installer; everything under
 `payload/config` → `60-index-config`). `IMPLEMENTATION_PLAN.md` records the
 full design, decision log, and phase mapping.
 
+## Environments — how agents reach the vault
+
+Both access paths hit the same policy layer (dedup guard, unreviewed
+stamping, access logging), so pick per machine:
+
+| Environment | Path |
+|---|---|
+| Claude Code / Codex, MCP allowed | MCP tools, user scope (`--claude-scope both`) — richest: typed tools, works in every session |
+| Claude Code, enterprise policy blocks user-scope MCP | Project `.mcp.json` per repo where allowed, plus **script mode** everywhere: the `second-brain` skill carries runnable commands for search (`70-scripts/search/*.sh`), context packs, and memory writes (`70-scripts/memory/remember.sh`) — no MCP registration needed, only Bash. Optional: allowlist `Bash(<vault>/70-scripts/*)` in `~/.claude/settings.json` to skip per-call prompts |
+| Claude CLI on Bedrock / any provider | Identical to the above — MCP and skills are harness features, provider-agnostic |
+| Chat clients (Claude Desktop, claude.ai) | MCP only (no shell): add the `second-brain` launcher to the client's MCP config |
+| Humans | Obsidian on the vault folder; scripts directly |
+
 ## Memory discipline (anti-bloat)
 
 The vault is the single durable memory across projects; per-project agent
